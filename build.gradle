@@ -43,8 +43,6 @@ runs {
         systemProperty 'forge.logging.console.level', 'debug'
         systemProperty 'forge.enabledGameTestNamespaces', config.mod_id
 
-        programArguments(Arrays.asList("--mixin mixins.${config.mod_id}.json".split(' ')))
-
         modSource project.sourceSets.main
     }
 
@@ -245,7 +243,7 @@ modrinth {
     versionType = config.release_type
     uploadFile = jar
     gameVersions = [config.mc_version]
-    loaders = ['Forge', 'NeoForge']
+    loaders = ['NeoForge']
     dependencies {
         def mods = config.required_mods.split(";")
         if (mods.length > 0 && (mods.length > 1 || !mods[0].isEmpty()))
@@ -309,7 +307,6 @@ curseforge {
         changelog = ""
         releaseType = config.release_type
         addGameVersion config.mc_version
-        addGameVersion "Forge"
         addGameVersion "NeoForge"
         mainArtifact(jar) {
             displayName = "[${config.mc_version}] ${config.mod_name} - ${config.mod_version}"
