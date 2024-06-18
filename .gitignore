@@ -5,7 +5,6 @@ bin
 .metadata
 .classpath
 .project
-libraries
 
 # idea
 out
@@ -21,6 +20,9 @@ build
 # other
 eclipse
 run
+runs
+logs
 
 # Files from Forge MDK
 forge*changelog.txt
+/libraries/
