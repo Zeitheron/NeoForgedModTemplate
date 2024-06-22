@@ -96,8 +96,8 @@ dependencies {
     implementation "net.neoforged:neoforge:${forge_version}"
 
     ////// UTILITY STUFF //////
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly "org.projectlombok:lombok:${lombok}"
+    annotationProcessor "org.projectlombok:lombok:${lombok}"
     ///////////////////////////
 
     if (hasConfig("hl_version") && !config.hl_version.isEmpty()) {
