@@ -103,7 +103,7 @@ dependencies {
     if (hasConfig("hl_version") && !config.hl_version.isEmpty()) {
         implementation "org.zeith.hammerlib:HammerLib-${mc_version}:${config.hl_version}"
     }
-	
+
     if (hasConfig("hammeranims_version") && !config.hammeranims_version.isEmpty()) {
         implementation "org.zeith.hammeranims:HammerAnimations-${mc_version}:${config.hammeranims_version}"
     }
@@ -174,7 +174,6 @@ dependencies {
             }
         }
     } else libDir.mkdir();
-	
 }
 
 def resourceTargets = ['META-INF/neoforge.mods.toml', 'pack.mcmeta']
@@ -203,8 +202,7 @@ jar {
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : archiveVersion,
                 "Implementation-Vendor"   : config.mod_authors,
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                "MixinConfigs"            : "mixins.${config.mod_id}.json"
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
@@ -219,8 +217,7 @@ task deobfJar(type: Jar) {
                     "Implementation-Title"    : project.name,
                     "Implementation-Version"  : archiveVersion,
                     "Implementation-Vendor"   : config.mod_authors,
-                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                    "MixinConfigs"            : "mixins.${config.mod_id}.json"
+                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
