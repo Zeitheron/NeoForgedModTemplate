@@ -443,8 +443,7 @@ tasks.register('buildAndUploadMod') {
 }
 
 afterEvaluate {
-    tasks["curseforge${config.cf_project}"].dependsOn.add(generateChangelog)
-    tasks["modrinth"].dependsOn.add(generateChangelog)
+    tasks["signJar"].dependsOn.add(generateChangelog)
 
     if (!config.maven_url.isEmpty()) {
         tasks["curseforge${config.cf_project}"].dependsOn.add(publish)
