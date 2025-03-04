@@ -23,6 +23,7 @@ eclipse
 run
 runs
 logs
+test
 
 # Files from Forge MDK
 forge*changelog.txt

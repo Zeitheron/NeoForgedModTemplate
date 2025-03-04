@@ -1,13 +1,9 @@
 package org.zeith.modid.init;
 
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import org.zeith.hammerlib.annotations.RegistryName;
-import org.zeith.hammerlib.annotations.SimplyRegister;
+import net.minecraft.world.item.context.UseOnContext;
+import org.zeith.hammerlib.annotations.*;
 import org.zeith.modid.ModId;
 
 @SimplyRegister
@@ -17,10 +13,10 @@ public interface ItemsMI
 	Item TEST_ITEM = ModId.MOD_TAB.add(new Item(new Item.Properties())
 	{
 		@Override
-		public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand)
+		public InteractionResult useOn(UseOnContext context)
 		{
-			System.out.println(player.getItemInHand(hand));
-			return InteractionResultHolder.success(player.getItemInHand(hand));
+			System.out.println(context.getItemInHand());
+			return InteractionResult.SUCCESS;
 		}
 	});
 }

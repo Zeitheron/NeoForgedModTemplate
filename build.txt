@@ -2,11 +2,6 @@
 mod_version=21.0.1
 build_candidate=false
 
-# Mod dependencies (jei is not a requirement, but HammerLib is)
-hl_version=21.0.13
-jei_version=19.5.0.44
-# hammeranims_version=21.0.34
-
 # Persistent mod info
 mod_id=modid
 archive_name=ModId

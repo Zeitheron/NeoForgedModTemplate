@@ -1,19 +1,20 @@
 buildscript {
     dependencies {
         classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.4.+"
-        classpath "se.bjurr.gitchangelog:git-changelog-gradle-plugin:+"
     }
 }
 
 plugins {
+    id 'java-library'
+    id 'maven-publish'
     id "com.modrinth.minotaur" version "2.+"
-    id 'net.neoforged.gradle.userdev' version '7.0.145'
+    id 'idea'
+
+    id 'net.neoforged.gradle.userdev' version '7.0.173'
+    id "se.bjurr.gitchangelog.git-changelog-gradle-plugin" version "2.5.2"
 }
 
-apply plugin: 'idea'
-apply plugin: 'maven-publish'
 apply plugin: 'com.matthewprenger.cursegradle'
-apply plugin: 'se.bjurr.gitchangelog.git-changelog-gradle-plugin'
 
 ext.configFile = file("build.txt")
 configFile.withReader {
@@ -49,23 +50,23 @@ runs {
     }
 
     client {
-		def args = new ArrayList()
-		
-		if (hasConfig("mc_user") && !config.mc_user.isEmpty()) {
-			def userId = config.mc_user.split(',', 2)
-			args.add "--username"
-			args.add userId[0]
+        def args = new ArrayList()
 
-			args.add "--uuid"
-			if (userId.length > 1) args.add userId[1]
-			else args.add "00000000000000000000000000000001" // this is a default
-		}
-		
-		programArguments(args)
+        if (hasConfig("mc_user") && !config.mc_user.isEmpty()) {
+            def userId = config.mc_user.split(',', 2)
+            args.add "--username"
+            args.add userId[0]
+
+            args.add "--uuid"
+            if (userId.length > 1) args.add userId[1]
+            else args.add "00000000000000000000000000000001" // this is a default
+        }
+
+        arguments(args)
     }
 
     server {
-        programArgument '--nogui'
+        argument '--nogui'
     }
 }
 
@@ -93,31 +94,31 @@ repositories {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:${forge_version}"
+    implementation "net.neoforged:neoforge:${neo_version}"
 
     ////// UTILITY STUFF //////
     compileOnly "org.projectlombok:lombok:${lombok}"
     annotationProcessor "org.projectlombok:lombok:${lombok}"
     ///////////////////////////
 
-    if (hasConfig("hl_version") && !config.hl_version.isEmpty()) {
-        implementation "org.zeith.hammerlib:HammerLib-${mc_version}:${config.hl_version}"
+    if (hasProperty("hammerlib")) {
+        implementation "org.zeith.hammerlib:HammerLib-$mc_version:$hammerlib"
     }
 
-    if (hasConfig("hammeranims_version") && !config.hammeranims_version.isEmpty()) {
-        implementation "org.zeith.hammeranims:HammerAnimations-${mc_version}:${config.hammeranims_version}"
+    if (hasProperty("hammeranims")) {
+        implementation "org.zeith.hammeranims:HammerAnimations-$mc_version:$hammeranims"
     }
 
-    if (hasConfig("jei_version") && !config.jei_version.isEmpty()) {
-        compileOnly "mezz.jei:jei-${mc_version}-common-api:${config.jei_version}"
-        compileOnly "mezz.jei:jei-${mc_version}-neoforge-api:${config.jei_version}"
-        runtimeOnly "mezz.jei:jei-${mc_version}-neoforge:${config.jei_version}"
+    if (hasConfig("jei") ) {
+        compileOnly "mezz.jei:jei-$mc_version-common-api:$jei"
+        compileOnly "mezz.jei:jei-$mc_version-neoforge-api:$jei"
+        runtimeOnly "mezz.jei:jei-$mc_version-neoforge:$jei"
     }
 
     def libraries = new File(file("libraries"), "${mc_version}")
     if (!libraries.isDirectory()) libraries.mkdirs()
 
-    def libDir = new File(libraries, "all");
+    def libDir = new File(libraries, "all")
     if (libDir.isDirectory()) {
         libDir.eachFile { file ->
             def splitPos = file.name.lastIndexOf("-")
@@ -131,7 +132,7 @@ dependencies {
         }
     } else libDir.mkdir();
 
-    libDir = new File(libraries, "classpathOnly");
+    libDir = new File(libraries, "classpathOnly")
     if (libDir.isDirectory()) {
         libDir.eachFile { file ->
             def splitPos = file.name.lastIndexOf("-")
@@ -145,7 +146,7 @@ dependencies {
         }
     } else libDir.mkdir();
 
-    libDir = new File(libraries, "runtimeOnly");
+    libDir = new File(libraries, "runtimeOnly")
     if (libDir.isDirectory()) {
         libDir.eachFile { file ->
             def splitPos = file.name.lastIndexOf("-")
@@ -159,7 +160,7 @@ dependencies {
         }
     } else libDir.mkdir();
 
-    libDir = new File(file("libraries"), "embedded");
+    libDir = new File(file("libraries"), "embedded")
     if (libDir.isDirectory()) {
         libDir.eachFile { file ->
             def splitPos = file.name.lastIndexOf("-")
@@ -179,7 +180,7 @@ dependencies {
 def resourceTargets = ['META-INF/neoforge.mods.toml', 'pack.mcmeta']
 def replaceProperties = [
         minecraft_version: mc_version, minecraft_version_range: mc_range,
-        forge_version    : "${mc_version}-${forge_version}", forge_version_range: forge_range, javafml_range: javafml_range,
+        neo_version    : "${mc_version}-${neo_version}", neo_range: neo_range, loader_version_range: loader_version_range,
         mod_id           : config.mod_id, mod_name: config.mod_name, mod_license: config.mod_license, mod_version: config.mod_version,
         mod_authors      : config.mod_authors, mod_description: config.mod_description,
         hl_version       : config.hl_version, modrinth_project: config.modrinth_project,
@@ -384,9 +385,8 @@ curseforge {
     }
 }
 
-import net.neoforged.gradle.common.tasks.PotentiallySignJar
-
-task signJar(type: PotentiallySignJar, dependsOn: jar) {
+tasks.register('signJar', net.neoforged.gradle.common.tasks.PotentiallySignJar) {
+    dependsOn('jar')
     onlyIf {
         System.env.MC_KS_PASS != null
     }
@@ -395,29 +395,17 @@ task signJar(type: PotentiallySignJar, dependsOn: jar) {
     storePass = System.env.MC_KS_PASS
     keyPass = System.env.MC_KS_PASS
     input = jar.archiveFile
-}
-
-task placeSignedJar {
+    def origJar = jar.archiveFile.get().asFile
+    outputFileName = origJar.getName() + ".signed"
     doLast {
-        def resF = signJar.output.get().asFile
-        def af = jar.archiveFile.get().asFile
+        def resF = output.get().asFile
+        def af = origJar
         af.delete()
         resF.renameTo(af)
     }
 }
 
-signJar.finalizedBy('placeSignedJar')
-
-def reobfFile = jar.archiveFile.get().asFile
-def reobfArtifact = artifacts.add('default', reobfFile) {
-    type 'jar'
-    builtBy 'signJar'
-}
-
-jar.finalizedBy('signJar')
-publish.dependsOn('signJar')
-
-build.dependsOn signJar
+assemble.finalizedBy('signJar')
 
 task generateChangelog(type: se.bjurr.gitchangelog.plugin.gradle.GitChangelogTask) {
     group = "git changelog"
