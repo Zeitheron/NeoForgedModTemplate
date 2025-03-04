@@ -101,15 +101,15 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:${lombok}"
     ///////////////////////////
 
-    if (hasProperty("hammerlib")) {
+    if (project.hasProperty("hammerlib")) {
         implementation "org.zeith.hammerlib:HammerLib-$mc_version:$hammerlib"
     }
 
-    if (hasProperty("hammeranims")) {
+    if (project.hasProperty("hammeranims")) {
         implementation "org.zeith.hammeranims:HammerAnimations-$mc_version:$hammeranims"
     }
 
-    if (hasConfig("jei") ) {
+    if (project.hasConfig("jei") ) {
         compileOnly "mezz.jei:jei-$mc_version-common-api:$jei"
         compileOnly "mezz.jei:jei-$mc_version-neoforge-api:$jei"
         runtimeOnly "mezz.jei:jei-$mc_version-neoforge:$jei"
@@ -431,7 +431,8 @@ tasks.register('buildAndUploadMod') {
 }
 
 afterEvaluate {
-    tasks["signJar"].dependsOn.add(generateChangelog)
+    tasks["curseforge${config.cf_project}"].dependsOn.add(generateChangelog)
+    tasks["modrinth"].dependsOn.add(generateChangelog)
 
     if (!config.maven_url.isEmpty()) {
         tasks["curseforge${config.cf_project}"].dependsOn.add(publish)
@@ -460,24 +461,26 @@ tasks.withType(JavaCompile).configureEach {
 
 import java.nio.file.Files
 
-def incrementBuild = {
-    if (!hasConfig("build_candidate") || !Boolean.parseBoolean(config.build_candidate)) {
-        def buildTxt = configFile.toPath()
-        List<String> lines = Files.readAllLines buildTxt
-        lines.replaceAll { String ln ->
-            if (ln.startsWith("mod_version")) {
-                def version = ln.split("=")[1]
-                def dot = version.lastIndexOf('.') + 1
-                def newVersion = version.substring(0, dot)
-                def lastOne = Integer.parseInt(version.substring(dot)) + 1
-                return "mod_version=" + newVersion + lastOne
-            }
-            if (ln.startsWith("last_git_commit")) {
-                def lastCommit = ln.split("=", 2)[1]
-                def truncated = se.bjurr.gitchangelog.api.GitChangelogApi.gitChangelogApiBuilder()
-                        .withFromRevision(lastCommit)
-                        .withFromRepo(projectDir)
-                        .withTemplateContent("""
+tasks.register("incrementBuildVersionProperty") {
+    group "upload"
+    doLast {
+        if (!project.ext.config.isSet("build_candidate") || !Boolean.parseBoolean(project.ext.config.build_candidate)) {
+            def buildTxt = configFile.toPath()
+            List<String> lines = Files.readAllLines buildTxt
+            lines.replaceAll { String ln ->
+                if (ln.startsWith("mod_version")) {
+                    def version = ln.split("=")[1]
+                    def dot = version.lastIndexOf('.') + 1
+                    def newVersion = version.substring(0, dot)
+                    def lastOne = Integer.parseInt(version.substring(dot)) + 1
+                    return "mod_version=" + newVersion + lastOne
+                }
+                if (ln.startsWith("last_git_commit")) {
+                    def lastCommit = ln.split("=", 2)[1]
+                    def truncated = se.bjurr.gitchangelog.api.GitChangelogApi.gitChangelogApiBuilder()
+                            .withFromRevision(lastCommit)
+                            .withFromRepo(projectDir)
+                            .withTemplateContent("""
 {{#tags}}
 {{#commits}}
 [START]{{hash}}[END]
@@ -485,25 +488,20 @@ def incrementBuild = {
 {{/tags}}
 """).render()
 
-                def found = truncated.indexOf("[START]")
-                def endIdx = truncated.indexOf("[END]", found)
-                if (found == -1 || endIdx == -1) return ln
-                return "last_git_commit=" + truncated.substring(found + 7, endIdx)
+                    def found = truncated.indexOf("[START]")
+                    def endIdx = truncated.indexOf("[END]", found)
+                    if (found == -1 || endIdx == -1) return ln
+                    return "last_git_commit=" + truncated.substring(found + 7, endIdx)
+                }
+                return ln
             }
-            return ln
-        }
-        Files.write buildTxt, lines, java.nio.file.StandardOpenOption.CREATE
-    } else println "Build candidate enabled, we are not increasing build number after this."
-}
-
-tasks.register("incrementBuildVersionProperty") {
-    group "upload"
-    doLast incrementBuild
+            Files.write buildTxt, lines, java.nio.file.StandardOpenOption.CREATE
+        } else println "Build candidate enabled, we are not increasing build number after this."
+    }
 }
 
 // This piece of garbage will ensure that the build number is updated after build is executed.
-tasks.build.doLast incrementBuild
-tasks.buildAndUploadMod.doLast incrementBuild
+tasks.buildAndUploadMod.finalizedBy('incrementBuildVersionProperty')
 
 idea {
     module {
